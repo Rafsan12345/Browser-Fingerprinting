@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Browser Fingerprinting Info</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        h2 {
+            color: #333;
+        }
+        .info-box {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>🔍 আপনার ব্রাউজার সম্পর্কিত তথ্য</h2>
+
+    <div class="info-box" id="screenSize"></div>
+    <div class="info-box" id="windowSize"></div>
+    <div class="info-box" id="browserInfo"></div>
+    <div class="info-box" id="osInfo"></div>
+    <div class="info-box" id="timeZone"></div>
+    <div class="info-box" id="fonts"></div>
+    <div class="info-box" id="plugins"></div>
+    <div class="info-box" id="dnt"></div>
+    <div class="info-box" id="canvas"></div>
+
+    <script>
+        // স্ক্রিন এবং উইন্ডো সাইজ
+        document.getElementById("screenSize").innerText =
+            "স্ক্রিন সাইজ: " + screen.width + " x " + screen.height;
+
+        document.getElementById("windowSize").innerText =
+            "উইন্ডো সাইজ: " + window.innerWidth + " x " + window.innerHeight;
+
+        // ব্রাউজার ও OS
+        const userAgent = navigator.userAgent;
+        document.getElementById("browserInfo").innerText =
+            "ব্রাউজার: " + userAgent;
+
+        // OS আনুমানিক ধরার চেষ্টা
+        let os = "Unknown";
+        if (userAgent.includes("Windows")) os = "Windows";
+        else if (userAgent.includes("Mac")) os = "macOS";
+        else if (userAgent.includes("Linux")) os = "Linux";
+        else if (userAgent.includes("Android")) os = "Android";
+        else if (userAgent.includes("iPhone")) os = "iOS";
+
+        document.getElementById("osInfo").innerText =
+            "অপারেটিং সিস্টেম: " + os;
+
+        // টাইমজোন
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        document.getElementById("timeZone").innerText =
+            "টাইম জোন: " + timeZone;
+
+        // Do Not Track
+        const dnt = navigator.doNotTrack === "1" ? "Enabled" : "Disabled";
+        document.getElementById("dnt").innerText =
+            "Do Not Track সেটিং: " + dnt;
+
+        // ইনস্টল করা প্লাগইন
+        const pluginList = [];
+        for (let i = 0; i < navigator.plugins.length; i++) {
+            pluginList.push(navigator.plugins[i].name);
+        }
+        document.getElementById("plugins").innerText =
+            "প্লাগইন: " + (pluginList.length ? pluginList.join(", ") : "কোনো প্লাগইন পাওয়া যায়নি");
+
+        // ইনস্টল করা ফন্ট (আংশিক চেক)
+        const fontsToCheck = ["Arial", "Roboto", "Courier New", "Times New Roman"];
+        const detectedFonts = [];
+
+        function detectFont(font) {
+            const baseFonts = ["monospace", "sans-serif", "serif"];
+            const testString = "mmmmmmmmmmlli";
+            const testSize = "72px";
+
+            const span = document.createElement("span");
+            span.style.fontSize = testSize;
+            span.innerHTML = testString;
+            document.body.appendChild(span);
+
+            const defaultWidths = baseFonts.map(base => {
+                span.style.fontFamily = base;
+                return span.offsetWidth;
+            });
+
+            for (let i = 0; i < baseFonts.length; i++) {
+                span.style.fontFamily = font + "," + baseFonts[i];
+                if (span.offsetWidth !== defaultWidths[i]) {
+                    document.body.removeChild(span);
+                    return true;
+                }
+            }
+
+            document.body.removeChild(span);
+            return false;
+        }
+
+        fontsToCheck.forEach(f => {
+            if (detectFont(f)) detectedFonts.push(f);
+        });
+
+        document.getElementById("fonts").innerText =
+            "ইনস্টল করা ফন্ট (আংশিক): " + (detectedFonts.length ? detectedFonts.join(", ") : "সনাক্ত করা যায়নি");
+
+        // Canvas Fingerprinting (উদাহরণ)
+        function getCanvasFingerprint() {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            ctx.textBaseline = "top";
+            ctx.font = "14px 'Arial'";
+            ctx.fillStyle = "#f60";
+            ctx.fillRect(125, 1, 62, 20);
+            ctx.fillStyle = "#069";
+            ctx.fillText("Fingerprint!", 2, 15);
+            return canvas.toDataURL();
+        }
+
+        document.getElementById("canvas").innerText =
+            "Canvas fingerprint (data preview): " + getCanvasFingerprint().slice(0, 50) + "...";
+
+    </script>
+</body>
+</html>
